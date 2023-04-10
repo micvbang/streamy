@@ -105,6 +105,7 @@ func newDownloadHandler(mu *sync.Mutex, requests map[uuid.UUID]*request) http.Ha
 			for _, chunkPath := range req.chunkPaths {
 				chunkPaths <- chunkPath
 			}
+			close(chunkPaths)
 		}
 		mu.Unlock()
 
