@@ -138,6 +138,7 @@ func newUploadHandler(mu *sync.Mutex, requests map[uuid.UUID]*request) http.Hand
 		mu.Lock()
 		req, ok := requests[requestUUID]
 		if !ok {
+			mu.Unlock()
 			w.Write([]byte("invalid request id"))
 			return
 		}
