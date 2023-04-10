@@ -15,8 +15,7 @@ import (
 
 type request struct {
 	chunkPathConsumers chan (chan<- string)
-
-	chunkPaths []string
+	chunkPaths         []string
 }
 
 func (req request) Done() bool {
@@ -110,7 +109,6 @@ func newDownloadHandler(mu *sync.Mutex, requests map[uuid.UUID]*request) http.Ha
 		mu.Unlock()
 
 		chunkReader := streamy.NewChunkReader(chunkPaths)
-
 		n, err := io.Copy(w, chunkReader)
 		if err != nil {
 			log.Printf("failed to copy to http response: %s", err)
@@ -136,6 +134,7 @@ func newUploadHandler(mu *sync.Mutex, requests map[uuid.UUID]*request) http.Hand
 		}
 
 		mu.Lock()
+		// NOTE: doesn't stop user from attempting to upload on same id again
 		req, ok := requests[requestUUID]
 		if !ok {
 			mu.Unlock()
