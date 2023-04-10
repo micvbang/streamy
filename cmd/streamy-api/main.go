@@ -36,12 +36,12 @@ func main() {
 }
 
 func makeRouter(mu *sync.Mutex, requests map[uuid.UUID]*request) http.HandlerFunc {
+	createUploadHandler := newCreateUploadHandler(mu, requests)
+	uploadHandler := newUploadHandler(mu, requests)
+	downloadHandler := newDownloadHandler(mu, requests)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("request URL: %s\n", r.URL)
-
-		createUploadHandler := newCreateUploadHandler(mu, requests)
-		uploadHandler := newUploadHandler(mu, requests)
-		downloadHandler := newDownloadHandler(mu, requests)
 
 		switch r.URL.Path {
 		case "/requests/new":
