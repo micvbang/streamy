@@ -20,22 +20,23 @@ type ChunkWriter struct {
 	curChunkFile *os.File
 }
 
-func NewChunkWriter(filePathPrefix string, maxFileSize int, chunksWritten chan<- string) (*ChunkWriter, error) {
-	sw := &ChunkWriter{
+func NewChunkWriter(filePathPrefix string, maxFileSize int, chunksWritten chan<- string) *ChunkWriter {
+	return &ChunkWriter{
 		chunkPathPrefix: filePathPrefix,
 		maxChunkSize:    maxFileSize,
 		mu:              &sync.Mutex{},
 		chunksWritten:   chunksWritten,
 	}
-	err := sw.openNextChunk()
-	if err != nil {
-		return nil, err
-	}
-
-	return sw, nil
 }
 
 func (sw *ChunkWriter) Write(buf []byte) (int, error) {
+	if sw.curChunkFile == nil {
+		err := sw.openNextChunk()
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	var n1 int
 	var err error
 	if sw.curChunkSize+len(buf) > sw.maxChunkSize {

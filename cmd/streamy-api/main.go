@@ -146,14 +146,7 @@ func newUploadHandler(mu *sync.Mutex, requests map[uuid.UUID]*request) http.Hand
 
 		chunksComplete := make(chan string, 8)
 
-		chunkWriter, err := streamy.NewChunkWriter(fmt.Sprintf("/tmp/streamy_%s", requestUUID), 4*1024*1024, chunksComplete)
-		if err != nil {
-			httpWriteError(w, http.StatusInternalServerError, fmt.Sprintf("failed to init split writer: %s", err))
-			mu.Unlock()
-			return
-		}
-
-		// handle new downloaders arriving and new chunks being complete
+		// handle new downloaders arriving and new chunks being completed
 		go handleNewChunkConsumers(req.chunkPathConsumers, chunksComplete)
 
 		userFile, userFileHeader, err := r.FormFile("file")
@@ -164,6 +157,7 @@ func newUploadHandler(mu *sync.Mutex, requests map[uuid.UUID]*request) http.Hand
 		defer userFile.Close()
 		log.Printf("user file size: %d", userFileHeader.Size)
 
+		chunkWriter := streamy.NewChunkWriter(fmt.Sprintf("/tmp/streamy_%s", requestUUID), 4*1024*1024, chunksComplete)
 		slowReader := streamy.NewSlowReader(userFile, 5*time.Millisecond)
 		readTotal, err := io.CopyN(chunkWriter, slowReader, userFileHeader.Size)
 		if err != nil {
